@@ -1,13 +1,26 @@
 import jwt from "jsonwebtoken";
-const config = useRuntimeConfig();
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig();
+
   const token = getCookie(event, "access_token");
-  if (!token) return null;
+  if (!token) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Unauthorized",
+    });
+  }
 
   try {
-    return jwt.verify(token, config.jwtSecret);
+    const decoded = jwt.verify(token, config.jwtSecret);
+    return {
+      authenticated: true,
+      user: decoded,
+    };
   } catch {
-    return null;
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Invalid token",
+    });
   }
 });

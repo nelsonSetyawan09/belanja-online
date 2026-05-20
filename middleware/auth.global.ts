@@ -1,11 +1,23 @@
-export default defineNuxtRouteMiddleware(async () => {
-  const { user, fetchUser } = useAuth();
+const publicPages = ["/login", "/register"];
 
-  if (!user.value) {
-    await fetchUser();
+export default defineNuxtRouteMiddleware(async (to) => {
+  if (publicPages.includes(to.path)) {
+    return;
   }
 
-  if (!user.value) {
+  const { user } = useAuth();
+
+  // skip kalau user sudah ada
+  if (user.value) {
+    return;
+  }
+
+  try {
+    const headers = useRequestHeaders(["cookie"]);
+    const data = await $fetch("/api/auth/me", { headers });
+    user.value = data.user;
+  } catch {
+    user.value = null;
     return navigateTo("/login");
   }
 });

@@ -1,10 +1,20 @@
 export const useAuth = () => {
   const user = useState<any>("user", () => null);
 
-  const fetchUser = async () => {
-    const { data } = await useFetch("/api/auth/me");
-    user.value = data.value;
+  const isLoggedIn = computed(() => !!user.value);
+  const logout = async () => {
+    await $fetch("/api/auth/logout", {
+      method: "POST",
+    });
+
+    user.value = null;
+
+    await navigateTo("/login");
   };
 
-  return { user, fetchUser };
+  return {
+    user,
+    isLoggedIn,
+    logout,
+  };
 };

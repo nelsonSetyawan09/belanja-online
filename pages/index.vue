@@ -1,10 +1,16 @@
 <template>
-  <div class="text-3xl text-red-600">test werwr</div>
+  <div>
+    <div class="grid grid-cols-4 gap-4">
+      <div v-for="product in products?.products" :key="product.id">
+        <ProductComp :product="product" />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-definePageMeta({
-  middleware: "auth",
+const { data: products } = await useFetch("/api/products", {
+  method: "GET",
 });
 </script>
 
