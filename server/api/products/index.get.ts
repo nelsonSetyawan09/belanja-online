@@ -6,7 +6,8 @@ export default defineEventHandler(async (event) => {
     title: string;
     description: string;
     price: number;
-    imageUrl: string;
+    image: string;
+    category: string;
   }
   const products = db.prepare(`SELECT * FROM products`).all() as
     | Products[]

@@ -1,26 +1,20 @@
 <template>
-  <div>
-    <div
-      class="w-full max-w-sm bg-neutral-primary-soft p-6 border border-default rounded-base shadow-xs"
-    >
-      <NuxtLink to="/">
-        <img
-          class="rounded-base mb-6"
-          :src="product?.image"
-          alt="product image"
-        />
-      </NuxtLink>
+  <div
+    class="w-full max-w-sm bg-neutral-primary-soft p-6 border border-default rounded-base shadow-xs"
+  >
+    <NuxtLink :to="`/product/${product?.id}`">
+      <img
+        class="rounded-base mb-6"
+        :src="product?.image"
+        alt="product image"
+      />
       <div>
-        <NuxtLink to="/">
-          <h5 class="text-xl text-heading font-semibold tracking-tight">
-            {{ product?.title }}
-          </h5>
-        </NuxtLink>
-        <NuxtLink to="/">
-          <h5 class="text-xl text-heading font-semibold tracking-tight">
-            {{ product?.description }}
-          </h5>
-        </NuxtLink>
+        <h5 class="text-xl text-heading font-semibold tracking-tight">
+          {{ product?.title }}
+        </h5>
+        <h5 class="text-xl text-heading font-semibold tracking-tight">
+          {{ product?.description }}
+        </h5>
         <div>
           <h5 class="text-xl text-heading font-semibold tracking-tight">
             Rp. {{ product?.price }}
@@ -42,7 +36,7 @@
           </button>
         </div>
       </div>
-    </div>
+    </NuxtLink>
   </div>
 </template>
 
