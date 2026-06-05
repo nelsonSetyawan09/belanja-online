@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full max-w-sm bg-neutral-primary-soft p-6 border border-default rounded-base shadow-xs"
+    class="w-full max-w-sm bg-neutral-primary-soft p-6 border border-default rounded-base shadow-xs mx-4 my-2"
   >
     <NuxtLink :to="`/product/${product?.id}`">
       <img
@@ -8,59 +8,72 @@
         :src="product?.image"
         alt="product image"
       />
+    </NuxtLink>
+    <div>
+      <h5 class="text-xl text-heading font-semibold tracking-tight">
+        {{ product?.title }}
+      </h5>
+      <h5 class="text-xl text-heading font-semibold tracking-tight">
+        {{ product?.description }}
+      </h5>
       <div>
         <h5 class="text-xl text-heading font-semibold tracking-tight">
-          {{ product?.title }}
+          Rp. {{ product?.price }}
         </h5>
-        <h5 class="text-xl text-heading font-semibold tracking-tight">
-          {{ product?.description }}
-        </h5>
-        <div>
-          <h5 class="text-xl text-heading font-semibold tracking-tight">
-            Rp. {{ product?.price }}
-          </h5>
-        </div>
-        <div class="flex flex-col justify-between mt-6 gap-3">
-          <ClientOnly>
-            <span class="text-xl font-extrabold text-heading"
-              >Rating: {{ getRandomRating() }}</span
-            >
-          </ClientOnly>
-          <button
-            type="button"
-            @click="addToCart(product)"
-            class="flex items-center justify-center text-center bg-blue-600 hover:bg-blue-700 box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-3 py-2 focus:outline-none"
-          >
-            <span v-if="isAlreadyInCart(cart, product)">Item Added</span>
-            <span v-else> Add to Cart</span>
-          </button>
-        </div>
       </div>
-    </NuxtLink>
+      <div class="flex flex-col justify-between mt-6 gap-3">
+        <ClientOnly>
+          <span class="text-xl font-extrabold text-heading"
+            >Rating: {{ getRandomRating() }}</span
+          >
+        </ClientOnly>
+        <button
+          type="button"
+          @click="addToCart(product)"
+          class="flex items-center justify-center text-center bg-blue-600 hover:bg-blue-700 box-border border border-transparent focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-3 py-2 focus:outline-none"
+        >
+          <span>
+            <span v-if="pending">Adding...</span>
+            <span v-else>Add to Cart</span>
+          </span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-defineProps(["product"]);
-const cart = useCart("cart");
+const { product } = defineProps(["product"]);
+const { user } = useAuth();
 
 const getRandomRating = () => {
   return (Math.random() * 5).toFixed(1);
 };
 
-const addToCart = (product) => {
-  if (userInfo.value && !isAlreadyInCart(cart.value, product)) {
-    cart.value.push(product);
-  } else {
-    alert("Please log in to add items to your cart.");
-  }
-};
+const pending = ref(false);
+const error = ref(null);
 
-const isAlreadyInCart = (cartState, productToCheck) => {
-  return false;
-  // return cartState.some(
-  //   (productInCart) => productInCart.id === productToCheck.id,
-  // );
+const addToCart = async () => {
+  if (pending.value) return;
+  try {
+    pending.value = true;
+
+    const response = await $fetch("/api/carts/createNewCartProduct", {
+      method: "POST",
+      body: {
+        user_id: user.value.id,
+        product_id: product.id,
+        quantity: 1,
+      },
+    });
+
+    navigateTo("/cart"); // Redirect to cart page after successful submission
+  } catch (err) {
+    error.value = err;
+    console.error(err);
+  } finally {
+    pending.value = false;
+  }
 };
 </script>
 
