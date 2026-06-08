@@ -35,7 +35,9 @@
               {{ cartProduct.title }}
             </th>
             <td class="px-6 py-4">{{ cartProduct.description }}</td>
-            <td class="px-6 py-4">Rp.{{ cartProduct.price.toFixed(2) }}</td>
+            <td class="px-6 py-4">
+              Rp.{{ (cartProduct.price ?? 0).toFixed(2) }}
+            </td>
             <td class="px-6 py-4">{{ cartProduct.category }}</td>
             <td class="px-6 py-4">
               <img
@@ -45,6 +47,17 @@
               />
             </td>
             <td class="px-6 py-4">{{ cartProduct.quantity }}</td>
+            <td class="px-6 py-4">
+              <button
+                @click="removeFromCart(cartProduct.id)"
+                :disabled="loadingCartById === cartProduct.id"
+              >
+                <span v-if="loadingCartById === cartProduct.id"
+                  >Removing...</span
+                >
+                <span v-else>X</span>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -59,8 +72,8 @@
           Total
         </h5>
         <p class="text-body mb-6">$ {{ calcTotallCart }}</p>
-        <NuxtLink
-          href="#"
+        <button
+          @click="navigateToCheckout"
           class="inline-flex items-center text-white bg-blue-600 box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none"
         >
           Checkout
@@ -81,39 +94,74 @@
               d="M19 12H5m14 0-4 4m4-4-4-4"
             />
           </svg>
-        </NuxtLink>
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+const loadingCartById = ref(null);
+
 const {
   data: carts,
   error: errorCarts,
   pending: pendingCarts,
+  refresh: refreshCart,
 } = await useFetch("/api/carts");
+
 const {
   data: products,
   error: errorProducts,
   pending: pendingProducts,
 } = await useFetch("/api/products");
 
-const cartProducts = carts?.value?.carts.map((cart) => {
-  const product = products?.value?.products.find(
-    (product) => product.id === cart.product_id,
-  );
-  return {
-    ...cart,
-    title: product?.title,
-    description: product?.description,
-    price: product?.price,
-    image: product?.image,
-    category: product?.category,
-  };
+const cartProducts = computed(() => {
+  if (!carts.value?.carts || !products.value?.products) return [];
+  return carts?.value?.carts.map((cart) => {
+    const product = products?.value?.products.find(
+      (product) => product.id === cart.product_id,
+    );
+    return {
+      ...cart,
+      title: product?.title,
+      description: product?.description,
+      price: product?.price,
+      image: product?.image,
+      category: product?.category,
+    };
+  });
 });
 
-const calcTotallCart = cartProducts?.reduce((total, cartProduct) => {
-  return total + cartProduct.price * cartProduct.quantity;
-}, 0);
+const calcTotallCart = computed(() => {
+  return cartProducts.value.reduce((total, cartProduct) => {
+    return total + cartProduct.price * cartProduct.quantity;
+  }, 0);
+});
+
+const navigateToCheckout = () => {
+  console.log("navigate to checkout");
+  if (carts.value?.carts.length > 0) {
+    navigateTo("/checkout");
+  } else {
+    alert("Cart is empty. Please add products to cart before checkout.");
+  }
+};
+
+const removeFromCart = async (productId) => {
+  try {
+    loadingCartById.value = productId;
+    await $fetch(`/api/carts/${productId}`, {
+      method: "DELETE",
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    await refreshCart();
+  } catch (error) {
+    console.error("Failed to remove product from cart", error);
+    alert("Failed to remove product from cart. Please try again.");
+  } finally {
+    loadingCartById.value = null;
+  }
+};
 </script>
