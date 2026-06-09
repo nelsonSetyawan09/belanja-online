@@ -14,6 +14,16 @@
           class="text-sm text-body bg-neutral-secondary-soft border-b rounded-base border-default"
         >
           <tr>
+            <th scope="col" class="px-6 py-3 font-medium">
+              <div>
+                <input
+                  type="checkbox"
+                  v-model="selectAll"
+                  class="w-5 h-5 border-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 cursor-pointer transition duration-200 hover:scale-110"
+                />
+                <span class="ms-2">Select All</span>
+              </div>
+            </th>
             <th scope="col" class="px-6 py-3 font-medium">Product name</th>
             <th scope="col" class="px-6 py-3 font-medium">Description</th>
             <th scope="col" class="px-6 py-3 font-medium">Price</th>
@@ -28,6 +38,14 @@
             v-for="cartProduct in cartProducts"
             :key="cartProduct.id"
           >
+            <td class="px-6 py-4">
+              <input
+                type="checkbox"
+                :value="cartProduct.id"
+                v-model="selectedCartIds"
+                class="w-5 h-5 border-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 cursor-pointer transition duration-200 hover:scale-110"
+              />
+            </td>
             <th
               scope="row"
               class="px-6 py-4 font-medium text-heading whitespace-nowrap"
@@ -102,6 +120,7 @@
 
 <script setup>
 const loadingCartById = ref(null);
+const selectedCartIds = ref([]);
 
 const {
   data: carts,
@@ -133,15 +152,33 @@ const cartProducts = computed(() => {
   });
 });
 
+const selectAll = computed({
+  get() {
+    return (
+      cartProducts.value.length > 0 &&
+      cartProducts.value.every((cart) =>
+        selectedCartIds.value.includes(cart.id),
+      )
+    );
+  },
+  set(value) {
+    selectedCartIds.value = value
+      ? cartProducts.value.map((cart) => cart.id)
+      : [];
+  },
+});
+
 const calcTotallCart = computed(() => {
-  return cartProducts.value.reduce((total, cartProduct) => {
-    return total + cartProduct.price * cartProduct.quantity;
-  }, 0);
+  return cartProducts.value
+    .filter((cartProduct) => selectedCartIds.value.includes(cartProduct.id))
+    .reduce((total, cartProduct) => {
+      return total + cartProduct.price * cartProduct.quantity;
+    }, 0);
 });
 
 const navigateToCheckout = () => {
   console.log("navigate to checkout");
-  if (carts.value?.carts.length > 0) {
+  if (selectedCartIds.value?.length > 0) {
     navigateTo("/checkout");
   } else {
     alert("Cart is empty. Please add products to cart before checkout.");
