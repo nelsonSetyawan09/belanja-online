@@ -121,6 +121,7 @@
 <script setup>
 const loadingCartById = ref(null);
 const selectedCartIds = ref([]);
+const checkoutStore = useCheckoutStore();
 
 const {
   data: carts,
@@ -177,8 +178,9 @@ const calcTotallCart = computed(() => {
 });
 
 const navigateToCheckout = () => {
-  console.log("navigate to checkout");
   if (selectedCartIds.value?.length > 0) {
+    console.log("navigate to checkout");
+    checkoutStore.setSelectedCartIds(selectedCartIds.value);
     navigateTo("/checkout");
   } else {
     alert("Cart is empty. Please add products to cart before checkout.");
